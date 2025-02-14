@@ -1,0 +1,76 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# IDE - PyCharm
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# IDE - Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Project specific
+results/           # Directory for learning session results
+*.log             # Log files
+.coverage         # Coverage reports
+htmlcov/          # Coverage HTML reports
+.pytest_cache/    # Pytest cache
+.mypy_cache/      # MyPy cache
+.ruff_cache/      # Ruff cache
+
+# OS specific
+.DS_Store         # MacOS
+Thumbs.db         # Windows
+.directory        # KDE
+*.swp             # Vim
+*.swo             # Vim
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Distribution / packaging
+*.tar.gz
+*.tgz
+*.zip

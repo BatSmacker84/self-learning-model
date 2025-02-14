@@ -1,0 +1,52 @@
+{
+  "timestamp": "2025-02-14T13:40:02.707942",
+  "total_problems": 5,
+  "correct_answers": 0,
+  "problems": [
+    {
+      "question": "What is 7 + 7?",
+      "difficulty": 0.0,
+      "student_answer": 16,
+      "correct_answer": 14,
+      "confidence": 0.32080728033773054,
+      "is_correct": false,
+      "score": 0.0
+    },
+    {
+      "question": "What is 6 + 9?",
+      "difficulty": 0.0,
+      "student_answer": 16,
+      "correct_answer": 15,
+      "confidence": 0.9040188387863375,
+      "is_correct": false,
+      "score": 0.0
+    },
+    {
+      "question": "What is 8 + 10?",
+      "difficulty": 0.0,
+      "student_answer": 17,
+      "correct_answer": 18,
+      "confidence": 0.3392320587589188,
+      "is_correct": false,
+      "score": 0.0
+    },
+    {
+      "question": "What is 3 + 6?",
+      "difficulty": -0.1,
+      "student_answer": 11,
+      "correct_answer": 9,
+      "confidence": 0.5528359994536846,
+      "is_correct": false,
+      "score": 0.0
+    },
+    {
+      "question": "What is 3 + 6?",
+      "difficulty": -0.2,
+      "student_answer": 7,
+      "correct_answer": 9,
+      "confidence": 0.16337491052959985,
+      "is_correct": false,
+      "score": 0.0
+    }
+  ]
+}
