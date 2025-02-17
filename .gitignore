@@ -49,21 +49,12 @@ venv.bak/
 .ipynb_checkpoints
 *.ipynb
 
-# Project specific
-results/           # Directory for learning session results
-*.log             # Log files
-.coverage         # Coverage reports
-htmlcov/          # Coverage HTML reports
-.pytest_cache/    # Pytest cache
-.mypy_cache/      # MyPy cache
-.ruff_cache/      # Ruff cache
-
 # OS specific
-.DS_Store         # MacOS
-Thumbs.db         # Windows
-.directory        # KDE
-*.swp             # Vim
-*.swo             # Vim
+.DS_Store
+Thumbs.db
+.directory
+*.swp
+*.swo
 
 # Environment variables
 .env
@@ -74,3 +65,12 @@ Thumbs.db         # Windows
 *.tar.gz
 *.tgz
 *.zip
+
+# Project specific
+results/
+*.log
+.coverage
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
