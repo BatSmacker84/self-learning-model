@@ -1,68 +1,91 @@
-from ..common.types import Problem, StudentResponse
-import random
+from typing import List, Tuple
+import torch
+from src.models.llm import LLM
 
-class StudentSolver:
-    """Basic student model that attempts to solve math problems."""
+class StudentModel(LLM):
+    def __init__(self, model_name: str = "Qwen/Qwen2.5-1.5B"):
+        super().__init__(model_name)
 
-    def __init__(self, learning_rate: float = 0.1):
-        self.learning_rate = learning_rate
-        self.performance_history = []
-        self.knowledge_level = 0.0 # Range from 0 to 1
+    def _clean_response(self, response: str, question: str) -> str:
+        return response.replace(question, "").strip()
 
-    def solve_problem(self, problem: Problem) -> StudentResponse:
-        """Attempt to solve the given problem."""
-        if problem.topic != "math":
-            raise ValueError(f"Unsupported topic: {problem.topic} (StudentSolver can only solve math problems)")
+    def gen_with_probs(self, question: str) -> Tuple[str, torch.Tensor]:
+        if self.model is None or self.tokenizer is None:
+            raise ValueError("Model and tokenizer must be loaded first")
 
-        # Extract numbers from the question using more robust parsing
-        try:
-            # Remove any trailing punctuation and split into words
-            words = problem.question.rstrip('?!.').split()
+        self.model.eval()
 
-            # Find the numbers in the question
-            numbers = []
-            for word in words:
-                # Remove any commas from numbers
-                cleaned = word.replace(',', '')
-                try:
-                    num = int(cleaned)
-                    numbers.append(num)
-                except ValueError:
-                    continue
+        inputs = self.tokenize(question)
+        inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
-            if len(numbers) != 2:
-                raise ValueError("Could not find exactly two numbers in the problem")
-
-            a, b = numbers
-
-            # Simulate knowledge level influence on accuracy
-            correct_answer = a + b
-            confidence = random.uniform(self.knowledge_level, 1.0)
-
-            # Introduce possible errors based on knowledge level
-            if random.random() > self.knowledge_level:
-                # Simulate making a mistake
-                answer = correct_answer + random.randint(-2, 2)
-            else:
-                answer = correct_answer
-
-            return StudentResponse(
-                problem_id=str(id(problem)),
-                answer=answer,
-                reasoning=f"I added {a} and {b} to get {answer}",
-                confidence=confidence
+        with torch.no_grad():
+            outputs = self.model.generate(
+                input_ids=inputs["input_ids"],
+                attention_mask=inputs["attention_mask"],
+                num_return_sequences=1,
+                temperature=0.7,
+                do_sample=True,
+                pad_token_id=self.tokenizer.pad_token_id,
+                output_scores=True,
+                return_dict_in_generate=True,
+                output_hidden_states=True,
             )
 
-        except (IndexError, ValueError) as e:
-            raise ValueError(f"Failed to parse problem: {e}")
+        self.last_hidden_states = outputs.hidden_states[-1][-1]
 
-    def update_knowledge(self, was_correct: bool):
-        """Update the knowledge level based on correctness."""
-        if was_correct:
-            self.knowledge_level = min(1.0,
-                self.knowledge_level + self.learning_rate)
-        else:
-            self.knowledge_level = max(0.0,
-                self.knowledge_level - self.learning_rate * 0.5)
+        generated_tokens = outputs.sequences[0]
+        scores = torch.stack(outputs.scores, dim=0)
+        log_probs = torch.log_softmax(scores, dim=-1)
 
-        self.performance_history.append(was_correct)
+        seq_length = generated_tokens.size(0) - inputs["input_ids"].size(1)
+        token_log_probs = torch.zeros(
+            seq_length,
+            device=self.device,
+            dtype=self.dtype,
+        )
+
+        for i in range(seq_length):
+            token_idx = generated_tokens[inputs["input_ids"].size(1) + i]
+            token_log_probs[i] = log_probs[i, 0, token_idx]
+
+        generated_text = self.tokenizer.decode(generated_tokens, skip_special_tokens=True)
+        generated_text = self._clean_response(question, generated_text)
+
+        return generated_text, token_log_probs
+
+    def get_last_hidden_states(self):
+        if self.last_hidden_states is None:
+            raise ValueError("No hidden states available. Run generate_with_probs first.")
+        return self.last_hidden_states
+
+    def solve(self, question: str) -> str:
+        response = self.generate(question).strip()
+        return self._clean_response(response, question)
+
+    def solve_batch(self, questions: List[str]) -> List[str]:
+        return [self.solve(question) for question in questions]
+
+if __name__ == "__main__":
+    from src.teacher.gt_problem_gen import MathProblemGenerator
+    from src.teacher.nl_question_gen import TeacherModel
+
+    generator = MathProblemGenerator()
+    problems = generator.gen_problem_batch(3)
+
+    teacher = TeacherModel()
+    teacher.load()
+    questions = teacher.gen_question_batch(problems)
+    teacher = None
+
+    student = StudentModel()
+    student.load()
+
+    print("Problem Solving Session:")
+    for problem, question in zip(problems, questions):
+        print("\n" + "="*50)
+        print(f"Operation: {problem.operation.value}")
+        print(f"Numbers: {problem.operands}")
+        print(f"GT Solution: {problem.solution}")
+        print(f"\nQuestion: {question}")
+
+        print(f"\nStudent's Answer: {student.solve(question)}")

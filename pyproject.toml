@@ -4,10 +4,9 @@ version = "0.1.0"
 description = "A Teacher-Student Framework for Autonomous Learning"
 requires-python = ">=3.12"
 dependencies = [
+    "accelerate>=1.4.0",
     "numpy",
     "torch",
-    "gymnasium",
-    "pytest",
     "transformers",
 ]
 
@@ -16,7 +15,6 @@ dev = [
     "black",
     "ruff",
     "mypy",
-    "pytest-cov",
     "ipykernel",
 ]
 
@@ -29,11 +27,6 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-python_files = ["test_*.py", "*_test.py"]
-pythonpath = ["src"]
 
 [tool.ruff]
 line-length = 88

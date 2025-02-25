@@ -7,12 +7,35 @@ class LLM:
         self.model = None
         self.tokenizer = None
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.dtype = torch.float16
+        self.token_cache = {}
         print(f"Loaded model ({self.model_name}) on {self.device}")
 
     def load(self) -> None:
-        self.model = AutoModelForCausalLM.from_pretrained(self.model_name)
+        self.model = AutoModelForCausalLM.from_pretrained(
+            self.model_name,
+            torch_dtype=self.dtype,
+            device_map="auto",
+        )
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
         self.model.to(self.device)
+
+    def tokenize(self, text: str) -> dict:
+        if self.tokenizer is None:
+            raise ValueError("Tokenizer must be loaded first")
+
+        if text in self.token_cache:
+            return self.token_cache[text]
+
+        tokens = self.tokenizer(
+            text,
+            return_tensors="pt",
+            padding=True,
+            truncation=True,
+            return_attention_mask=True,
+        )
+        self.token_cache[text] = tokens
+        return tokens
 
     def generate(self, prompt: str) -> str:
         if self.model is None or self.tokenizer is None:
@@ -20,13 +43,7 @@ class LLM:
 
         self.model.eval()
 
-        inputs = self.tokenizer(
-            prompt,
-            return_tensors="pt",
-            padding=True,
-            truncation=True,
-            return_attention_mask=True,
-        )
+        inputs = self.tokenize(prompt)
 
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
 
